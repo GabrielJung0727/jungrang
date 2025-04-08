@@ -1,103 +1,178 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import 'dayjs/locale/ko';
+import 'dayjs/locale/en';
+import 'dayjs/locale/de';
+import { useTheme } from '@/context/ThemeContext';
+import languages from '@/i18n';
+import ChatPlaceholder from '@/components/ChatPlaceholder';
+import FooterPlayer from '@/components/FooterPlayer';
+import SlideMenu from '@/components/SlideMenu';
+import { Menu } from 'lucide-react';
+import WidgetManager from '@/components/WidgetManager';
+import Header from '@/components/Header';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+export default function HomePage() {
+  const [times, setTimes] = useState({
+    seoul: '',
+    vancouver: '',
+    lucerne: '',
+    dates: { seoul: '', vancouver: '', lucerne: '' },
+  });
+
+  const bgImages = ['/images/bg1.jpg', '/images/bg2.jpg', '/images/bg3.jpg', '/images/bg4.jpg'];
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showPersonalSettings, setShowPersonalSettings] = useState(false);
+
+  const [user, setUser] = useState<any>(null);
+  const [search, setSearch] = useState('');
+  const [widgets, setWidgets] = useState<string[]>([]);
+
+  const { language, background, setLanguage, setBackground } = useTheme();
+  const text = languages[language];
+
+  const ALLOWED_USERS = ['jinkyu', 'jaewon', 'hanul', 'minseok'];
+  const MENU_ITEMS = [
+    { label: 'About 랑구', href: '/about' },
+    { label: 'Music Project', href: '/music' },
+    { label: 'Our Travel', href: '/travel' },
+    { label: 'Whose', href: '/whose' },
+  ];
+  const EXTRA_ITEMS = [
+    { label: 'Calendar', href: '/calendar' },
+    { label: 'Todo List', href: '/todo' },
+  ];
+  const isAllowed = user && ALLOWED_USERS.includes(user.username);
+
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      router.push(`/search?query=${encodeURIComponent(search.trim())}`);
+    }
+  };
+
+  useEffect(() => {
+    const data = localStorage.getItem('user');
+    if (data) setUser(JSON.parse(data));
+  }, []);
+
+  useEffect(() => {
+    const updateTimes = () => {
+      const now = dayjs();
+      setTimes({
+        seoul: now.tz('Asia/Seoul').locale('ko').format('A hh:mm:ss'),
+        vancouver: now.tz('America/Vancouver').locale('en').format('hh:mm:ss A'),
+        lucerne: now.tz('Europe/Zurich').locale('de').format('HH:mm:ss'),
+        dates: {
+          seoul: now.tz('Asia/Seoul').locale('ko').format('YYYY년 MM월 DD일'),
+          vancouver: now.tz('America/Vancouver').locale('en').format('MMMM DD, YYYY'),
+          lucerne: now.tz('Europe/Zurich').locale('de').format('DD.MM.YYYY'),
+        },
+      });
+    };
+    updateTimes();
+    const iv = setInterval(updateTimes, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % bgImages.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="relative min-h-screen overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+        style={{ backgroundImage: `url(${bgImages[slideIndex]})` }}
+      />
+      <div className="absolute inset-0 bg-black opacity-60" />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="relative z-10 flex flex-col min-h-screen text-white">
+
+        <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)}>
+        {/* 사이트 내 검색 */}
+        <form onSubmit={handleSearch} className="mb-4 flex">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="사이트 내 검색..."
+            className="flex-1 px-3 py-1 rounded-l bg-gray-800 text-white"
+          />
+          <button type="submit" className="px-3 bg-blue-600 rounded-r">
+            검색
+          </button>
+        </form>
+
+        {/* 위젯 설정 (권한 있는 사용자만) */}
+        {isAllowed && (
+          <div className="mb-4">
+            <h3 className="font-semibold mb-2">위젯 설정</h3>
+            <WidgetManager username={user.username} />
+          </div>
+        )}
+
+        {/* 기본 메뉴 */}
+        <div className="mb-4 space-y-2">
+          {MENU_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} className="block hover:underline">
+              {item.label}
+            </Link>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* 추가 메뉴 (권한 있는 사용자만) */}
+        {isAllowed && (
+          <div className="space-y-2 mb-4">
+            {EXTRA_ITEMS.map((item) => (
+              <Link key={item.href} href={item.href} className="block hover:underline">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </SlideMenu>
+
+        <section className="flex-1 flex flex-col items-center justify-center text-center mt-36 px-4">
+          <h1 className="text-4xl font-bold mb-4">{text.welcomeMessage} 👋</h1>
+          <p className="text-lg">{text.familyMessage}</p>
+        </section>
+
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+          {bgImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSlideIndex(idx)}
+              className={`w-3 h-3 rounded-full border-2 border-white transition-colors ${
+                idx === slideIndex ? 'bg-white' : 'bg-transparent'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }

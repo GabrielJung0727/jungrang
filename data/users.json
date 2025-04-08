@@ -1,0 +1,32 @@
+[
+    {
+      "name": "진규",
+      "email": "jinkyu@example.com",
+      "username": "jinkyu",
+      "password": "password1"
+    },
+    {
+      "name": "재원",
+      "email": "jaewon@example.com",
+      "username": "jaewon",
+      "password": "1234"
+    },
+    {
+      "name": "한울",
+      "email": "hanul@example.com",
+      "username": "hanul",
+      "password": "password3"
+    },
+    {
+      "name": "민석",
+      "email": "minseok@example.com",
+      "username": "minseok",
+      "password": "password4"
+    },
+    {
+      "name": "Guest",
+      "email": "",
+      "username": "guest",
+      "password": ""
+    }
+  ]
